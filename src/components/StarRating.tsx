@@ -3,9 +3,24 @@ import emptyStar from '../assets/icon_empty_star.svg';
 import halfStar from '../assets/icon_half_star.svg';
 import { useState } from 'react';
 
+const commentMap: Record<number, string> = {
+  0.5: '끔찍해요',
+  1: '최악이에요',
+  1.5: '이건 아니에요',
+  2: '별로에요',
+  2.5: '그냥 그래요',
+  3: '보통이에요',
+  3.5: '괜찮아요',
+  4: '좋아요',
+  4.5: '매우좋아요',
+  5: '최고에요',
+};
+
+/**
+ * 별점 평가 컴포넌트
+ */
 export default function StarRating() {
   const [starCount, setStarCount] = useState(0);
-  const [isHover, setIsHover] = useState(false);
   const [isHalfOver, setIsHalfOver] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
 
@@ -18,14 +33,10 @@ export default function StarRating() {
     const target = e.target as HTMLImageElement;
     setStarCount(Number(target.dataset.star));
 
-    // TODO: 절반이 넘었는지 체크하자
+    //? 별의 너비를 이용해서 커서가 별의 절반을 넘겼는지 체크
     const rect = target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    // console.log('width', rect.width);
-    // console.log('first', x);
-    const checkHalf = x > rect.width / 2;
-    // console.log('isHalfOver', checkHalf);
-    // console.log('starCount', starCount);
+    const xPos = e.clientX - rect.left;
+    const checkHalf = xPos > rect.width / 2;
     setIsHalfOver(checkHalf);
   };
 
@@ -44,19 +55,33 @@ export default function StarRating() {
     setIsClicked((prev) => !prev);
   };
 
+  /**
+   * 최종 점수 계산
+   */
+  const getFinalScore = () => {
+    if (isHalfOver) {
+      return starCount;
+    }
+    return starCount - 0.5;
+  };
+
   return (
-    <div className="w-10/12 max-w-lg rounded-lg bg-slate-50 px-3 py-8 text-slate-800 shadow-lg">
+    <div className="w-10/12 max-w-md space-y-6 rounded-lg bg-slate-50 px-3 py-6 text-slate-800 shadow-lg">
       <header>
-        <h2 className="text-center text-2xl font-bold">평점을 선택해주세요.</h2>
+        <h2 className="text-center text-xl font-bold">당신의 평점은?</h2>
       </header>
 
       <div className="flex justify-center">
-        <div className="flex w-fit rounded-lg bg-slate-400 py-2 px-1">
+        <div
+          className={`flex w-fit rounded-lg border-2 bg-slate-300 py-2 px-1 ${
+            isClicked && 'border-yellow-400'
+          }`}
+        >
           {Array(5)
             .fill(0)
             .map((_, index) => {
+              //? 현재 가리키는 별에 대한 처리
               if (starCount === index + 1) {
-                console.log('요시요시 : ', isHalfOver);
                 return (
                   <img
                     key={index}
@@ -71,6 +96,7 @@ export default function StarRating() {
                 );
               }
 
+              //? 현재 가리키는 별 이전이면 채워진 별, 이후면 빈 별
               return (
                 <img
                   key={index}
@@ -87,7 +113,9 @@ export default function StarRating() {
         </div>
       </div>
 
-      <footer>{/* 아직 모름 */}</footer>
+      <footer className="flex h-7 items-center justify-center">
+        <p className="text-lg font-semibold">{commentMap[getFinalScore()]}</p>
+      </footer>
     </div>
   );
 }
